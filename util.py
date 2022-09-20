@@ -33,9 +33,7 @@ def from_w_to_zkp(w):
     for key in w.keys():
         if "bias" in key:
             value_lists.append((((w[key].unsqueeze(0))).tolist()))
-            # break
         else:
-            # continue
             if "conv" in key:
                 value_lists.append((w[key].reshape(w[key].size()[0],-1)).tolist())
             else:

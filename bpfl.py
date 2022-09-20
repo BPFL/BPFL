@@ -10,10 +10,10 @@ import argparse
 from ZKP import *
 
 
-parser = argparse.ArgumentParser(description='命令行中传入一个数字')
+parser = argparse.ArgumentParser(description='parameters')
 parser.add_argument('-data_name', type=str, default="mnist", help='mnist,fmnist,cifar10,femnist')
-parser.add_argument('-client_all', type=int, default=10, help='total number of clients')
-parser.add_argument('-mali_num', type=int, default=0, help='number of malicious clients')
+parser.add_argument('-client_all', type=int, default=50, help='total number of clients')
+parser.add_argument('-mali_num', type=int, default=10, help='number of malicious clients')
 parser.add_argument('-attack_type', type=str, default="add_noise", help='attack type')
 parser.add_argument('-global_epoch', type=int, default=300, help='global_epoch')
 args = parser.parse_args()
