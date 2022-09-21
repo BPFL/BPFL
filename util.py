@@ -45,3 +45,10 @@ def from_list_to_w(w):
     for key in w.keys():
         value[key] = torch.Tensor(w[key])
     return value
+
+def cal_sensitivity(lr, clip, dataset_size):
+    return 2 * lr * clip
+
+def Laplace(epsilon, sensitivity, size):
+    noise_scale = sensitivity / epsilon
+    return np.random.laplace(0, scale=noise_scale, size=size)

@@ -162,6 +162,8 @@ for e in range(global_epoch):
             torch.cuda.empty_cache()
             mali_w = min_sum(to_mask(client_w,0-r), from_w_to_tensor(mali_model), mali_num, dev_type)
         mask_mali_w=to_mask(mali_w,r)
+        proof = generate_proof(keypair.pk, dim,from_tensor_to_list(mali_w) , from_tensor_to_list(server_w), from_tensor_to_list(mask_mali_w),from_tensor_to_list(r),ck, cos_threshold,euc_threshold)
+        client_proof.append(proof)
         for m_n in range(mali_num):
             client_w = mask_mali_w[None, :] if len(client_w) == 0 else torch.cat((client_w,mask_mali_w[None, :]), 0)
 
@@ -176,11 +178,13 @@ for e in range(global_epoch):
     if verified_num>0:
         global_w=mean(global_w)
     else:
-        global_w=to_mask(from_w_to_tensor(global_model),r)
-        server_model=copy.deepcopy(global_model)
+        i=i = np.random.randint(client_all)
+        server_model=train(model_name, global_model, train_data[i], device,fed_lr,local_epoch,dp=1)
+        global_w=to_mask(from_w_to_tensor(server_model),r)
 
     client_w=None
     global_w=to_mask(global_w,0-r)
+    print(global_w)
     start_idx = 0
     for key in server_model.keys():
         param_ = global_w[start_idx:start_idx + len(server_model[key].view(-1))].reshape(server_model[key].data.shape)
