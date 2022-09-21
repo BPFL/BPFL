@@ -1,0 +1,6 @@
+[submodule "ZKP/depends/libsnark"]
+	path = ZKP/depends/libsnark
+	url = https://github.com/scipr-lab/libsnark.git
+[submodule "ZKP/src/pybind11"]
+	path = ZKP/src/pybind11
+	url = https://github.com/pybind/pybind11.git
