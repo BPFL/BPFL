@@ -1,59 +1,146 @@
-#include <libff/common/default_types/ec_pp.hpp>
 #include <libsnark/common/default_types/r1cs_gg_ppzksnark_pp.hpp>
-#include <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/r1cs_gg_ppzksnark.hpp>
+#include <libsnark/gadgetlib1/pb_variable.hpp>
+#include <pybind11/pybind11.h>
+#include "gadget.hpp"
+#include <python3.8/Python.h>
+#include <pybind11/stl.h>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <chrono>
+#include <sstream>
 
+namespace py = pybind11;
 using namespace libsnark;
+using namespace std;
 
-/**
- * The code below provides an example of all stages of running a R1CS GG-ppzkSNARK.
- *
- * Of course, in a real-life scenario, we would have three distinct entities,
- * mangled into one in the demonstration below. The three entities are as follows.
- * (1) The "generator", which runs the ppzkSNARK generator on input a given
- *     constraint system CS to create a proving and a verification key for CS.
- * (2) The "prover", which runs the ppzkSNARK prover on input the proving key,
- *     a primary input for CS, and an auxiliary input for CS.
- * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
- *     a primary input for CS, and a proof.
- */
-template<typename ppT>
-bool run_r1cs_gg_ppzksnark(const r1cs_example<libff::Fr<ppT> > &example)
-{
-    libff::print_header("R1CS GG-ppzkSNARK Generator");
-    r1cs_gg_ppzksnark_keypair<ppT> keypair = r1cs_gg_ppzksnark_generator<ppT>(example.constraint_system);
-    printf("\n"); libff::print_indent(); libff::print_mem("after generator");
+typedef libff::Fr<default_r1cs_gg_ppzksnark_pp> FieldT;
 
-    libff::print_header("Preprocess verification key");
-    r1cs_gg_ppzksnark_processed_verification_key<ppT> pvk = r1cs_gg_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
+class pack_ck {
+    public:
+    FieldT check_value;
+    pack_ck(FieldT a){
+        check_value=a;
+    }
+};
 
-    libff::print_header("R1CS GG-ppzkSNARK Prover");
-    r1cs_gg_ppzksnark_proof<ppT> proof = r1cs_gg_ppzksnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input);
-    printf("\n"); libff::print_indent(); libff::print_mem("after prover");
-
-    libff::print_header("R1CS GG-ppzkSNARK Verifier");
-    const bool ans = r1cs_gg_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
-    printf("\n"); libff::print_indent(); libff::print_mem("after verifier");
-    printf("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
-
-    libff::print_header("R1CS GG-ppzkSNARK Online Verifier");
-    const bool ans2 = r1cs_gg_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);
-    assert(ans == ans2);
-
-    return ans;
-}
-
-template<typename ppT>
-void test_r1cs_gg_ppzksnark(size_t num_constraints, size_t input_size)
-{
-    r1cs_example<libff::Fr<ppT> > example = generate_r1cs_example_with_binary_input<libff::Fr<ppT> >(num_constraints, input_size);
-    const bool bit = run_r1cs_gg_ppzksnark<ppT>(example);
-    assert(bit);
-}
-
-int main () {
+r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp> generate_keypairs(int dim){
     default_r1cs_gg_ppzksnark_pp::init_public_params();
-    test_r1cs_gg_ppzksnark<default_r1cs_gg_ppzksnark_pp>(1000, 100);
+    protoboard<FieldT> pb;
+    valid_check<FieldT> check(pb, dim);
+    check.generate_r1cs_constraints();
+    const r1cs_constraint_system<FieldT> constraint_system = pb.get_constraint_system();
+    return r1cs_gg_ppzksnark_generator<default_r1cs_gg_ppzksnark_pp>(constraint_system);
+}
 
-    return 0;
+r1cs_gg_ppzksnark_proof<default_r1cs_gg_ppzksnark_pp> generate_proof(r1cs_gg_ppzksnark_proving_key<default_r1cs_gg_ppzksnark_pp> proving_key,int dim,vector<float> c,vector<float> s,vector<float> c_r,vector<int> r,FieldT ck,float cos,float euc){
+    default_r1cs_gg_ppzksnark_pp::init_public_params();
+    protoboard<FieldT> pb;
+    valid_check<FieldT> check(pb, dim);
+    check.generate_r1cs_constraints();
+    check.generate_r1cs_witness(c,s,c_r,r,ck,cos,euc);
+    return r1cs_gg_ppzksnark_prover<default_r1cs_gg_ppzksnark_pp>(proving_key, pb.primary_input(), pb.auxiliary_input());
+}
+
+bool verify_proof(r1cs_gg_ppzksnark_verification_key<default_r1cs_gg_ppzksnark_pp> verification_key,r1cs_gg_ppzksnark_proof<default_r1cs_gg_ppzksnark_pp> proof,vector<float> s,vector<float> c_r,FieldT ck,float cos,float euc){
+    default_r1cs_gg_ppzksnark_pp::init_public_params();
+    r1cs_primary_input<FieldT> input;
+    int i_k=65536,i_2k=256;
+    for (auto x : s) {
+        input.push_back(FieldT(x*i_k));
+    }
+    for (auto x : c_r) {
+        input.push_back(FieldT(x*i_k));
+    }
+    input.push_back(FieldT(cos*i_2k));
+    input.push_back(FieldT(euc*i_k));
+    input.push_back(ck);
+    return r1cs_gg_ppzksnark_verifier_strong_IC<default_r1cs_gg_ppzksnark_pp>(verification_key, input, proof);
+}
+
+FieldT get_check_value(vector<int> r){
+    int j=0;
+    int dim=r.size();
+    FieldT tmp[10],mul[9];
+    for(int i=0;i<10;i++){
+      tmp[i]=0;
+      if(i<9){
+        mul[i]=0;
+      }
+    }
+    for(int i=0;i<dim;i++){
+      switch (j)
+      {
+      case 0:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 1:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 2:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 3:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 4:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 5:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 6:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 7:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 8:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j++;
+        break;
+      case 9:
+        tmp[j]=tmp[j]+FieldT(r[i]);
+        j=0;
+        break;
+      default:
+        break;
+      }
+    }
+    mul[0]=tmp[0]*tmp[1];
+    for(int i=1;i<9;i++){
+      mul[i]=mul[i-1]*tmp[i+1];
+    }
+    return mul[8];
+}
+
+
+PYBIND11_MODULE(ZKP, m) {
+    m.doc() = "A zkp library from cpp"; // optional module docstring
+
+    
+    // m.def("get_dim", &get_dim, "A function which get data dim");
+    m.def("generate_keypairs", &generate_keypairs, "A function which generate_keypairs");
+    m.def("generate_proof", &generate_proof, "A function which generate_proof");
+    m.def("verify_proof", &verify_proof, "A function which verify_proof");
+    m.def("get_check_value", &get_check_value, "A function which get_check_value");
+    // m.def("pk_serialize", &pk_serialize, "A function which serialize pk");
+    // m.def("proof_serialize", &proof_serialize, "A function which serialize proof");
+    // m.def("pk_deserialize", &pk_deserialize, "A function which deserialize pk");
+    // m.def("proof_deserialize", &proof_deserialize, "A function which deserialize proof");
+    py::class_<r1cs_gg_ppzksnark_proving_key<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_proving_key");
+    py::class_<r1cs_gg_ppzksnark_verification_key<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_verification_key");
+    py::class_<r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_keypair").def_readwrite("pk", &r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>::pk).def_readwrite("vk", &r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>::vk);
+    py::class_<r1cs_gg_ppzksnark_proof<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_proof");
+    py::class_<FieldT>(m, "FieldT");
+
 }

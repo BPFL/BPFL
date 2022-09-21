@@ -19,8 +19,7 @@ private:
   vector<comparison_gadget<FieldT>> com_gadget;
   pb_variable<FieldT> tmp[10],mul[9],cmp_cos_value,cmp_euc_value;
 public:
-  int dim;//2^12=4096  2^24=16777216
-  // int i_k=10000,i_2k=100;
+  int dim;
   int i_k=65536,i_2k=256;
   pb_variable_array<FieldT> S,C,M_C,M;
   pb_variable<FieldT> cos,euc,check_value;
@@ -86,19 +85,17 @@ public:
     comparison_gadget<FieldT> cmp_cos(this->pb,200, zero,cmp_cos_value, less, less_or_eq, "cmp_cos");
     com_gadget.push_back(cmp_cos);
     
-    // // //euc
+    //euc
     inner_product_gadget<FieldT> euc_inner_product(this->pb, sub_S_C, sub_S_C, sub_l, "sub_euc_l");
     inner_gadget.push_back(euc_inner_product);
     this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(euc, euc, euc_sq));
     comparison_gadget<FieldT> cmp_euc(this->pb,64, zero,cmp_euc_value, less, less_or_eq, "cmp_euc");
     com_gadget.push_back(cmp_euc);
-    // // check mask
+    //check mask
     for(size_t i=0;i<dim;++i){
-      // this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(M_C[i]-C[i]-M[i], 1, 0));
-      // this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>((C[i]+M[i])-M_C[i], 1, sub_mask[i]));
       this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(sub_mask[i], 1-sub_mask[i], 0));
     }
-    // // verify mask
+    //verify mask
     for(int i=1;i<9;i++){
       this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(mul[i-1], tmp[i+1], mul[i]));
     }
@@ -114,7 +111,6 @@ public:
 
   void generate_r1cs_witness(vector<float> x,vector<float> y,vector<float> x_m,vector<int> r,FieldT ck,float cos_value,float euc_value)
   {
-    // this->pb.val(less_or_eq)=1;
     this->pb.val(k)=i_k;
     for(int i=0;i<dim;i++){
       this->pb.val(C[i])=x[i]*i_k;
@@ -206,40 +202,5 @@ public:
     for(int i=0;i<com_gadget.size();i++){
       com_gadget[i].generate_r1cs_witness();
     }
-    //  get();
   }
-  // void get(){
-  //   for(int i=0;i<dim;i++){
-  //     cout<<this->pb.val(C[i])<<" "<<this->pb.val(M_C[i])<<" "<<this->pb.val(sub_mask[i])<<endl;
-
-  //   }
-  //   for(int i=0;i<10;i++){
-  //     cout<<this->pb.val(tmp[i])<<endl;
-  //   }
-  //   for(int i=0;i<9;i++){
-  //     cout<<this->pb.val(mul[i])<<endl;
-  //   }
-  //   cout<<"inner       "<<this->pb.val(inner)<<endl;
-  //   cout<<"l_s         "<<this->pb.val(l_s)<<endl;
-  //   cout<<"l_c         "<<this->pb.val(l_c)<<endl;
-  //   cout<<"inner_sq    "<<this->pb.val(inner_sq)<<endl;
-  //   cout<<"k_inner_sq  "<<this->pb.val(k_inner_sq)<<endl;
-  //   cout<<"cos_sq      "<<this->pb.val(cos_sq)<<endl;
-  //   cout<<"l_s_c       "<<this->pb.val(l_s_c)<<endl;
-  //   cout<<"cos_l       "<<this->pb.val(cos_l)<<endl;
-  //   cout<<"euc_sq      "<<this->pb.val(euc_sq)<<endl;
-  //   cout<<"sub_l       "<<this->pb.val(sub_l)<<endl;
-  //   cout<<"cos         "<<this->pb.val(cos)<<endl;
-  //   cout<<"euc         "<<this->pb.val(euc)<<endl;
-  //   cout<<"check_value "<<this->pb.val(check_value)<<endl;
-  //   cout<<"mul8        "<<this->pb.val(mul[8])<<endl;
-  //   cout<<"cpm_cos     "<<this->pb.val(cmp_cos_value)<<endl;
-  //   cout<<"cmp_euc     "<<this->pb.val(cmp_euc_value)<<endl;
-    
-  //   for(int i=0;i<dim;i++){
-  //     if(!(this->pb.val(sub_mask[i])==0||this->pb.val(sub_mask[i])==1))
-  //     cout<<this->pb.val(sub_mask[i])<<endl;
-
-  //   }
-  // }
 };
