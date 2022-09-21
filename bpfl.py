@@ -174,7 +174,6 @@ for e in range(global_epoch):
         if verify_result:
             global_w = g.unsqueeze(0) if len(global_w) == 0 else torch.cat((global_w,g.unsqueeze(0)), 0)
             verified_num+=1
-    print("verified num:{}".format(verified_num))
     if verified_num>0:
         global_w=mean(global_w)
     else:
@@ -184,7 +183,6 @@ for e in range(global_epoch):
 
     client_w=None
     global_w=to_mask(global_w,0-r)
-    print(global_w)
     start_idx = 0
     for key in server_model.keys():
         param_ = global_w[start_idx:start_idx + len(server_model[key].view(-1))].reshape(server_model[key].data.shape)
