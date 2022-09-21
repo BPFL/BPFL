@@ -56,55 +56,9 @@ bool verify_proof(r1cs_gg_ppzksnark_verification_key<default_r1cs_gg_ppzksnark_p
     input.push_back(FieldT(cos*i_2k));
     input.push_back(FieldT(euc*i_k));
     input.push_back(ck);
-    //cout<<"p_input:"<<input<<endl;
     return r1cs_gg_ppzksnark_verifier_strong_IC<default_r1cs_gg_ppzksnark_pp>(verification_key, input, proof);
 }
 
-
-// vector<vector<int>> get_dim(vector<vector<vector<float>>> data){
-//     vector<vector<int>> dim;
-//     for(int i=0;i<data.size();i++){
-//         vector<int> tmp;
-//         tmp.push_back(data[i].size());
-//         tmp.push_back(data[i][0].size());
-//         dim.push_back(tmp);
-//         // cout<<i<<"  "<<data[i].size()<<"    "<<data[i][0].size()<<endl;
-//     }
-//     return dim;
-    
-// }
-
-// py::bytes pk_serialize(r1cs_gg_ppzksnark_proving_key<default_r1cs_gg_ppzksnark_pp> pk){
-//     default_r1cs_gg_ppzksnark_pp::init_public_params();
-//     stringstream ss;
-//     ss<<pk;
-//     return py::bytes(ss.str());
-// }
-
-// py::bytes proof_serialize(r1cs_gg_ppzksnark_proof<default_r1cs_gg_ppzksnark_pp> proof){
-//     default_r1cs_gg_ppzksnark_pp::init_public_params();
-//     stringstream ss;
-//     ss<<proof;
-//     return py::bytes(ss.str());
-// }
-
-// r1cs_gg_ppzksnark_proving_key<default_r1cs_gg_ppzksnark_pp> pk_deserialize(string str_pk){
-//     default_r1cs_gg_ppzksnark_pp::init_public_params();
-//     stringstream ss;
-//     ss<<str_pk;
-//     r1cs_gg_ppzksnark_proving_key<default_r1cs_gg_ppzksnark_pp>  pk;
-//     ss>>pk;
-//     return pk;
-// }
-
-// r1cs_gg_ppzksnark_proof<default_r1cs_gg_ppzksnark_pp> proof_deserialize(string str_proof){
-//     default_r1cs_gg_ppzksnark_pp::init_public_params();
-//     stringstream ss;
-//     ss<<str_proof;
-//     r1cs_gg_ppzksnark_proof<default_r1cs_gg_ppzksnark_pp>  proof;
-//     ss>>proof;
-//     return proof;
-// }
 FieldT get_check_value(vector<int> r){
     int j=0;
     int dim=r.size();
@@ -173,16 +127,10 @@ FieldT get_check_value(vector<int> r){
 PYBIND11_MODULE(ZKP, m) {
     m.doc() = "A zkp library from cpp"; // optional module docstring
 
-    
-    // m.def("get_dim", &get_dim, "A function which get data dim");
     m.def("generate_keypairs", &generate_keypairs, "A function which generate_keypairs");
     m.def("generate_proof", &generate_proof, "A function which generate_proof");
     m.def("verify_proof", &verify_proof, "A function which verify_proof");
     m.def("get_check_value", &get_check_value, "A function which get_check_value");
-    // m.def("pk_serialize", &pk_serialize, "A function which serialize pk");
-    // m.def("proof_serialize", &proof_serialize, "A function which serialize proof");
-    // m.def("pk_deserialize", &pk_deserialize, "A function which deserialize pk");
-    // m.def("proof_deserialize", &proof_deserialize, "A function which deserialize proof");
     py::class_<r1cs_gg_ppzksnark_proving_key<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_proving_key");
     py::class_<r1cs_gg_ppzksnark_verification_key<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_verification_key");
     py::class_<r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_keypair").def_readwrite("pk", &r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>::pk).def_readwrite("vk", &r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>::vk);
