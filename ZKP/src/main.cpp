@@ -125,18 +125,13 @@ FieldT get_check_value(vector<int> r){
 
 
 PYBIND11_MODULE(ZKP, m) {
-    m.doc() = "A zkp library from cpp"; // optional module docstring
+    m.doc() = "A zkp library from cpp";
 
     
-    // m.def("get_dim", &get_dim, "A function which get data dim");
     m.def("generate_keypairs", &generate_keypairs, "A function which generate_keypairs");
     m.def("generate_proof", &generate_proof, "A function which generate_proof");
     m.def("verify_proof", &verify_proof, "A function which verify_proof");
     m.def("get_check_value", &get_check_value, "A function which get_check_value");
-    // m.def("pk_serialize", &pk_serialize, "A function which serialize pk");
-    // m.def("proof_serialize", &proof_serialize, "A function which serialize proof");
-    // m.def("pk_deserialize", &pk_deserialize, "A function which deserialize pk");
-    // m.def("proof_deserialize", &proof_deserialize, "A function which deserialize proof");
     py::class_<r1cs_gg_ppzksnark_proving_key<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_proving_key");
     py::class_<r1cs_gg_ppzksnark_verification_key<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_verification_key");
     py::class_<r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>>(m, "r1cs_gg_ppzksnark_keypair").def_readwrite("pk", &r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>::pk).def_readwrite("vk", &r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>::vk);
