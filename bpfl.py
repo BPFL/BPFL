@@ -177,7 +177,7 @@ for e in range(global_epoch):
     if verified_num>0:
         global_w=mean(global_w)
     else:
-        i=i = np.random.randint(client_all)
+        i= np.random.randint(client_all)
         server_model=train(model_name, global_model, train_data[i], device,fed_lr,local_epoch,dp=1)
         global_w=to_mask(from_w_to_tensor(server_model),r)
 
