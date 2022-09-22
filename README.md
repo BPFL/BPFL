@@ -9,3 +9,4 @@ In BPFL, the valid check part is coded by C++ with [libsnark](https://github.com
 - torchvision
 - [phe](https://github.com/data61/python-paillier)
 ## Run
+1. You need to first compile the [main.cpp](https://github.com/BPFL/BPFL/blob/main/ZKP/src/main.cpp) file in the [ZKP](https://github.com/BPFL/BPFL/tree/main/ZKP/src) directory to obtain a dynamic link library named xxx.so and rename it as ZKP.so.
