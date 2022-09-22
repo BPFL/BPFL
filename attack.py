@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from aggregation import *
 
 def min_max(all_updates, model_re, n_attackers, dev_type='unit_vec'):
     if dev_type == 'unit_vec':
