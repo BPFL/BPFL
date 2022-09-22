@@ -1,5 +1,5 @@
 # BPFL: Towards Efficient Byzantine-Robust and Provably Privacy-Preserving Federated Learning
 
-# Run
-To run this code you need to install libsnark and pybind11 first
+# Dependencies
+In BPFL, the valid check part is coded by C++ with [libsnark](https://github.com/scipr-lab/libsnark), and the FL part is coded by Python, So you should first deploy libsnark and [pybind11](https://github.com/pybind/pybind11), which is a lightweight header-only library that mainly to create Python bindings of existing C++ code, to your machine before running.
 # BPFL
